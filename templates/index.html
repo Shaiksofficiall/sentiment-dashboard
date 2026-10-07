@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Travel Review Sentiment Analysis Dashboard | Reg: 24091A32F5</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+  <!-- Top Accent Background Glow -->
+  <div class="bg-glow-container"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="brand-section">
+      <div class="brand-icon">✈️</div>
+      <div>
+        <h1 class="brand-title">Travel Review <span class="text-orange">Analytics</span></h1>
+        <div style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono); font-weight:500;">
+          TripAdvisor Supervised Classification & LDA Pipeline
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-controls">
+      <!-- Prominent 3-State User Status Pill Container -->
+      <div id="userStatusContainer">
+        <span class="user-status-pill status-guest">
+          ⚪ Not Logged In — Click Login
+        </span>
+      </div>
+
+      <button class="btn btn-primary" id="loginNavBtn" onclick="openAuthModal()">Log In / Sign Up</button>
+    </div>
+  </nav>
+
+  <!-- Flowchart Architecture Banner -->
+  <div class="flowchart-banner">
+    <div class="flowchart-header">
+      <div style="display:flex; align-items:center; gap:0.75rem;">
+        <span style="font-weight:700; font-size:0.875rem; color:var(--orange); text-transform:uppercase; letter-spacing:0.04em;">
+          📐 System Architecture Flowchart Implementation
+        </span>
+        <span class="reg-tag">Student Reg No: 24091A32F5</span>
+      </div>
+      <span style="font-size:0.8rem; color:var(--text-muted);">End-to-End Modular Travel Analytics</span>
+    </div>
+
+    <div class="flowchart-steps">
+      <div class="flow-step">🎓 User / Student</div>
+      <span class="flow-arrow">➔</span>
+      <div class="flow-step">🔐 Auth & Role Mgmt</div>
+      <span class="flow-arrow">➔</span>
+      <div class="flow-step">📥 Review Aggregation</div>
+      <span class="flow-arrow">➔</span>
+      <div class="flow-step">🤖 Sentiment Engine</div>
+      <span class="flow-arrow">➔</span>
+      <div class="flow-step">🧩 Theme Extraction</div>
+      <span class="flow-arrow">➔</span>
+      <div class="flow-step">📊 Analytics Dashboard</div>
+    </div>
+  </div>
+
+  <main class="container">
+    <!-- Student Review Submission Section (Visible to logged-in students) -->
+    <section id="studentReviewCard" class="sandbox-card" style="display:none; border-color:var(--orange); margin-bottom:2rem;">
+      <div style="margin-bottom:1.25rem;">
+        <h3 style="font-size:1.15rem; font-weight:700; color:var(--orange); display:flex; align-items:center; gap:0.5rem;">
+          ✍️ Submit New Hotel Review (Student Portal)
+        </h3>
+        <p style="font-size:0.875rem; color:var(--text-muted);">
+          Write your experience at a hotel. Our sentiment classification engine will automatically score your review.
+        </p>
+      </div>
+
+      <form id="studentReviewForm" onsubmit="handleStudentReviewSubmit(event)">
+        <div class="form-grid-2col">
+          <div>
+            <label style="display:block; font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-bottom:0.3rem;">
+              Hotel Name (Search Worldwide - 🇮🇳 Indian Hotels Prioritized)
+            </label>
+            <div style="position:relative; width:100%;">
+              <input type="text" id="srHotelName" class="search-input" style="width:100%;"
+                placeholder="Type hotel name (e.g. Taj, Hilton, Ritz)..." required
+                oninput="handleHotelSearch(this.value)">
+              <div id="hotelAutocompleteDropdown" style="position:absolute; top:100%; left:0; right:0; max-height:300px; overflow-y:auto; background:var(--card); border:1px solid var(--line); border-radius:var(--radius-md); display:none; z-index:1000; box-shadow:var(--box-shadow-md);">
+                <!-- Populated by JavaScript -->
+              </div>
+            </div>
+            <div id="hotelResultsInfo" style="font-size:0.75rem; color:var(--text-dim); margin-top:0.3rem;"></div>
+            
+            <!-- Google Map Display for Selected Hotel -->
+            <div id="hotelMapContainer" style="margin-top:0.75rem; display:none; border-radius:var(--radius-md); overflow:hidden; box-shadow:var(--box-shadow-sm);">
+              <iframe id="hotelMapFrame" width="100%" height="250" style="border:none;" loading="lazy" allowfullscreen="" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+            <div id="hotelAddressDisplay" style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem; padding:0.65rem; background:var(--bg-secondary); border-radius:var(--radius-md); display:none; border-left:3px solid var(--orange);">
+              <!-- Hotel address and details -->
+            </div>
+          </div>
+          <div>
+            <label style="display:block; font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-bottom:0.3rem;">
+              Star Rating (1 to 5)
+            </label>
+            <select id="srRating" class="filter-select" style="width:100%;">
+              <option value="5">⭐⭐⭐⭐⭐ (5 Stars)</option>
+              <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
+              <option value="3">⭐⭐⭐ (3 Stars)</option>
+              <option value="2">⭐⭐ (2 Stars)</option>
+              <option value="1">⭐ (1 Star)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <label style="display:block; font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-bottom:0.3rem;">
+            Review Text
+          </label>
+          <textarea id="srReviewText" class="textarea-input" placeholder="Type your detailed hotel review experience..." required></textarea>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div id="srFeedback" style="font-size:0.85rem; font-weight:600;"></div>
+          <button type="submit" class="btn btn-primary">
+            Submit Review & Run Classifier 🚀
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Owner Admin Section (Visible only when role === 'owner') -->
+    <section id="adminSection" class="reviews-card" style="display:none; margin-bottom:2.5rem; border-color:var(--accent-emerald);">
+      <div class="section-title" style="margin-top:0;">
+        <h2 style="color:var(--accent-emerald);">🏨 Hotel Manager Admin Portal - Registered Students</h2>
+        <span style="font-size:0.85rem; color:var(--text-muted);">Protected Endpoint (<code>GET /api/admin/students</code>)</span>
+      </div>
+      <p style="font-size:0.875rem; color:var(--text-muted); margin-bottom:1rem;">
+        Click on any student row below to inspect their submitted hotel reviews and sentiment classifications.
+      </p>
+
+      <!-- Search Input for Admin Students List -->
+      <div class="filter-bar" style="margin-bottom:1rem;">
+        <input type="text" id="adminStudentSearch" class="search-input" placeholder="🔍 Search student by name or email (debounced 300ms)...">
+        <span style="font-size:0.8rem; color:var(--text-dim); align-self:center;">Click a student to expand their submitted reviews</span>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="review-table">
+          <thead>
+            <tr>
+              <th style="width:50px;">ID</th>
+              <th>Student Name</th>
+              <th>Email Address</th>
+              <th>Role</th>
+              <th>Registration Date</th>
+              <th>Last Login</th>
+              <th>Action / Reviews</th>
+            </tr>
+          </thead>
+          <tbody id="adminStudentsTbody">
+            <!-- Loaded dynamically from /api/admin/students -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Top Stat Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon indigo">📝</div>
+        <div class="stat-info">
+          <div class="value" id="totalReviewsVal">20,491</div>
+          <div class="label">Total Reviews Analyzed</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon amber">⭐</div>
+        <div class="stat-info">
+          <div class="value" id="avgRatingVal">3.95 ⭐</div>
+          <div class="label">Average Rating</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon emerald">🎯</div>
+        <div class="stat-info">
+          <div class="value" id="modelAccVal">82.48%</div>
+          <div class="label">Logistic Regression Accuracy</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon cyan">📊</div>
+        <div class="stat-info">
+          <div class="value">5 Topics</div>
+          <div class="label">LDA Extracted Complaints</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Model Sandbox -->
+    <section class="sandbox-card">
+      <div style="margin-bottom:1.25rem;">
+        <h3 style="font-size:1.15rem; font-weight:700; display:flex; align-items:center; gap:0.5rem;">
+          ⚡ Live Sentiment Analysis Sandbox (Model Inference Engine)
+        </h3>
+        <p style="font-size:0.875rem; color:var(--text-muted);">
+          Test the supervised TF-IDF + Logistic Regression classifier in real time. Type any hotel review below to compute sentiment predictions and contributing n-grams.
+        </p>
+      </div>
+
+      <div class="sandbox-layout">
+        <div>
+          <textarea id="sandboxInput" class="textarea-input"
+            placeholder="Type a custom hotel review (e.g., 'The staff were so friendly, room was spotless and ocean view was breathtaking!')"></textarea>
+
+          <div class="preset-buttons">
+            <span style="font-size:0.75rem; color:var(--text-dim); align-self:center;">Presets:</span>
+            <button class="preset-btn" onclick="loadPreset('Wonderful stay! Loved the breakfast spread and friendly front desk staff.')">😄 Positive Preset</button>
+            <button class="preset-btn" onclick="loadPreset('Room was clean but valet parking took 45 minutes and price was too high.')">😐 Neutral Preset</button>
+            <button class="preset-btn" onclick="loadPreset('Dirty sheets, rude staff, and air conditioning didn\'t work all night!')">😠 Negative Preset</button>
+          </div>
+
+          <button class="btn btn-primary" id="analyzeBtn" style="width:100%; justify-content:center; padding:0.75rem;">
+            Run Sentiment Classifier 🚀
+          </button>
+        </div>
+
+        <div>
+          <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem; font-weight:600;">Predicted Sentiment & Class Confidence:</div>
+          <div id="predBadge" class="pred-result-badge positive">😄 Positive (Sample)</div>
+
+          <div class="confidence-bar-container">
+            <div class="confidence-item">
+              <div class="confidence-label">
+                <span>Positive Class Confidence</span>
+                <span id="posPercent">88.5%</span>
+              </div>
+              <div class="progress-track">
+                <div id="posBar" class="progress-fill positive" style="width:88.5%;"></div>
+              </div>
+            </div>
+
+            <div class="confidence-item">
+              <div class="confidence-label">
+                <span>Neutral Class Confidence</span>
+                <span id="neuPercent">7.2%</span>
+              </div>
+              <div class="progress-track">
+                <div id="neuBar" class="progress-fill neutral" style="width:7.2%;"></div>
+              </div>
+            </div>
+
+            <div class="confidence-item">
+              <div class="confidence-label">
+                <span>Negative Class Confidence</span>
+                <span id="negPercent">4.3%</span>
+              </div>
+              <div class="progress-track">
+                <div id="negBar" class="progress-fill negative" style="width:4.3%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:1.25rem;">
+            <span style="font-size:0.8rem; color:var(--text-dim); font-weight:600;">Top Driving N-Gram Words:</span>
+            <div id="contributingWords" style="margin-top:0.4rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
+              <span class="keyword-tag">wonderful (+1.85)</span>
+              <span class="keyword-tag">loved (+1.42)</span>
+              <span class="keyword-tag">clean (+1.10)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Theme Extraction Service -->
+    <div class="section-title">
+      <h2>🧩 Theme Extraction Service (LDA Topic Clusters on Complaints)</h2>
+      <span style="font-size:0.85rem; color:var(--text-muted);">Unsupervised Co-occurrence Modeling</span>
+    </div>
+
+    <div class="themes-grid" id="themesContainer">
+      <!-- Loaded dynamically from /api/themes -->
+    </div>
+
+    <!-- Analytics Dashboard Charts Grid -->
+    <div class="section-title">
+      <h2>📊 Review Sentiment Analytics Dashboard</h2>
+      <span style="font-size:0.85rem; color:var(--text-muted);">Dataset Visual Insights</span>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card col-4">
+        <div class="chart-header">
+          <h3>Sentiment Distribution</h3>
+          <span style="font-size:0.75rem; color:var(--text-muted);">20,491 Reviews</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="sentimentDoughnutChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card col-4">
+        <div class="chart-header">
+          <h3>Rating Breakdown (1 to 5 Stars)</h3>
+          <span style="font-size:0.75rem; color:var(--text-muted);">Star Counts</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="ratingBarChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card col-4">
+        <div class="chart-header">
+          <h3>Model Confusion Matrix (82.48% Acc)</h3>
+          <span style="font-size:0.75rem; color:var(--text-muted);">Stratified Test Set</span>
+        </div>
+        <div id="confusionMatrixGrid" style="padding-top:0.5rem;">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <div class="chart-card col-12">
+        <div class="chart-header">
+          <h3>Simulated Sentiment Volume Trends (Monthly Distribution)</h3>
+          <span style="font-size:0.75rem; color:var(--text-muted);">Time-Series Overview</span>
+        </div>
+        <div class="chart-container" style="height:240px;">
+          <canvas id="trendLineChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Stream Explorer -->
+    <div class="section-title">
+      <h2>📥 Review Stream Explorer & Aggregation Service</h2>
+      <span style="font-size:0.85rem; color:var(--text-muted);">Searchable Datatable</span>
+    </div>
+
+    <section class="reviews-card">
+      <div class="filter-bar">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search reviews by keyword (e.g. 'breakfast', 'parking')...">
+
+        <div style="display:flex; gap:0.75rem;">
+          <select id="sentimentFilter" class="filter-select">
+            <option value="all">All Sentiments</option>
+            <option value="positive">Positive</option>
+            <option value="neutral">Neutral</option>
+            <option value="negative">Negative</option>
+          </select>
+
+          <select id="ratingFilter" class="filter-select">
+            <option value="all">All Ratings</option>
+            <option value="5">5 Stars</option>
+            <option value="4">4 Stars</option>
+            <option value="3">3 Stars</option>
+            <option value="2">2 Stars</option>
+            <option value="1">1 Star</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="review-table">
+          <thead>
+            <tr>
+              <th style="width:70px;">ID</th>
+              <th>Review Text</th>
+              <th style="width:120px;">Rating</th>
+              <th style="width:120px;">Sentiment</th>
+            </tr>
+          </thead>
+          <tbody id="reviewsTbody">
+            <!-- Loaded dynamically from /api/reviews -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <span id="pageInfo" style="font-size:0.85rem; color:var(--text-muted);">Page 1 of 205</span>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn btn-outline" id="prevPageBtn">◀ Previous</button>
+          <button class="btn btn-outline" id="nextPageBtn">Next ▶</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Auth Modal -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+        <h3 style="font-size:1.2rem; font-weight:700;">🔐 Account Authentication</h3>
+        <button onclick="closeAuthModal()" style="background:none; border:none; color:var(--text-muted); font-size:1.2rem; cursor:pointer;">✖</button>
+      </div>
+
+      <!-- Auth Tabs -->
+      <div style="display:flex; border-bottom:1px solid var(--border-color); margin-bottom:1.25rem;">
+        <button id="tabLoginBtn" class="btn btn-outline"
+          style="flex:1; border:none; border-bottom:2px solid var(--accent-primary); border-radius:0; padding:0.6rem;"
+          onclick="switchAuthTab('login')">Log In</button>
+        <button id="tabSignupBtn" class="btn btn-outline"
+          style="flex:1; border:none; border-radius:0; padding:0.6rem; color:var(--text-dim);"
+          onclick="switchAuthTab('signup')">Sign Up (Student)</button>
+        <button id="tabForgotBtn" class="btn btn-outline"
+          style="flex:1; border:none; border-radius:0; padding:0.6rem; color:var(--text-dim);"
+          onclick="switchAuthTab('forgot')">Reset Password</button>
+      </div>
+
+      <!-- Alert Error Box -->
+      <div id="authErrorAlert"
+        style="display:none; background:var(--neg-bg); border:1px solid var(--neg-border); color:var(--neg-color); padding:0.75rem; border-radius:var(--radius-sm); font-size:0.85rem; margin-bottom:1.25rem;">
+      </div>
+
+      <!-- Alert Success Box -->
+      <div id="authSuccessAlert"
+        style="display:none; background:var(--pos-bg); border:1px solid var(--pos-border); color:var(--pos-color); padding:0.75rem; border-radius:var(--radius-sm); font-size:0.85rem; margin-bottom:1.25rem;">
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+        <div style="margin-bottom:1rem;">
+          <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:0.3rem;">
+            Email Address or Username
+          </label>
+          <input type="text" id="loginEmail" class="search-input" style="width:100%;" placeholder="Email or username" required>
+        </div>
+
+        <div style="margin-bottom:0.5rem;">
+          <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:0.3rem;">
+            Password
+          </label>
+          <input type="password" id="loginPassword" class="search-input" style="width:100%;" placeholder="••••••••" required>
+        </div>
+
+        <div style="text-align:right; margin-bottom:1.25rem;">
+          <a href="#" style="font-size:0.8rem; color:var(--accent-primary); font-weight:600; text-decoration:none;"
+            onclick="switchAuthTab('forgot'); return false;">Forgot Password? (Email Reset)</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:0.75rem;">
+          Log In
+        </button>
+      </form>
+
+      <!-- Signup Form -->
+      <form id="signupForm" style="display:none;" onsubmit="handleSignupSubmit(event)">
+        <div style="margin-bottom:0.85rem;">
+          <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:0.3rem;">Full Name</label>
+          <input type="text" id="signupName" class="search-input" style="width:100%;" placeholder="John Doe" required>
+        </div>
+
+        <div style="margin-bottom:0.85rem;">
+          <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:0.3rem;">Student Email</label>
+          <input type="email" id="signupEmail" class="search-input" style="width:100%;" placeholder="student@univ.edu" required>
+        </div>
+
+        <div style="margin-bottom:1.25rem;">
+          <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:0.3rem;">Password (min 6 chars)</label>
+          <input type="password" id="signupPassword" class="search-input" style="width:100%;" placeholder="••••••••" minlength="6" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:0.75rem;">
+          Create Student Account
+        </button>
+      </form>
+
+      <!-- Forgot / Reset Password Form -->
+      <form id="forgotForm" style="display:none;" onsubmit="handleForgotPasswordRequest(event)">
+        <div id="forgotStep1">
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
+            Enter your account email. We will generate and dispatch a 6-digit email verification code.
+          </p>
+          <div style="margin-bottom:1rem;">
+            <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:0.3rem;">Account Email</label>
+            <input type="email" id="forgotEmail" class="search-input" style="width:100%;" placeholder="e.g. you@gmail.com" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:0.75rem; margin-bottom:0.75rem;">
+            ✉️ Send 6-Digit Email Code
+          </button>
+        </div>
+      </form>
+
+      <form id="resetForm" style="display:none;" onsubmit="handleResetPasswordSubmit(event)">
+        <div id="forgotStep2">
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
+            Enter the 6-digit email verification code and your new password below.
+          </p>
+          <div style="margin-bottom:0.85rem;">
+            <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:0.3rem;">Account Email</label>
+            <input type="email" id="resetEmail" class="search-input" style="width:100%;" readonly required>
+          </div>
+          <div style="margin-bottom:0.85rem;">
+            <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:0.3rem;">6-Digit Email Code</label>
+            <input type="text" id="resetCode" class="search-input" style="width:100%; font-size:1.1rem; letter-spacing:0.2em; text-align:center;" placeholder="123456" maxlength="6" required>
+          </div>
+          <div style="margin-bottom:1.25rem;">
+            <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:0.3rem;">New Password</label>
+            <input type="password" id="resetNewPassword" class="search-input" style="width:100%;" placeholder="••••••••" minlength="6" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; padding:0.75rem;">
+            🔒 Reset Password & Save Hash
+          </button>
+        </div>
+      </form>
+
+      <!-- Logout / Reset -->
+      <div id="logoutSection" style="display:none; margin-top:1rem; text-align:center;">
+        <button class="btn btn-outline" style="color:var(--neg-color); width:100%; justify-content:center;" onclick="logout()">
+          🚪 Log Out Session
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div style="display:flex; justify-content:center; align-items:center; gap:0.5rem; margin-bottom:0.3rem;">
+      <span class="reg-tag">Reg No: 24091A32F5</span>
+      <span>Travel Review Sentiment Analysis & Theme Extraction Dashboard</span>
+    </div>
+    <div style="font-size:0.78rem; color:var(--text-dim);">
+      Supervised Logistic Regression Classifier (82.48% Accuracy) & Latent Dirichlet Allocation (LDA) Topic Model
+    </div>
+  </footer>
+
+  <!-- JavaScript Code -->
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+
+</html>

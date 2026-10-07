@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ft.dorzieiiy — Video editor, visual storyteller and photographer — ft.dorzieiiy.">
+  <title>ft.dorzieiiy — Video Editor</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --black:#0a0a0a;
+      --white:#f5f4ef;
+      --muted:#9b9b95;
+      --line:#292925;
+      --lime:#d5ff45;
+      --orange:#ff713b;
+      --card:#141414;
+    }
+
+    *{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      background:var(--black);
+      color:var(--white);
+      font-family:"Manrope",sans-serif;
+      overflow-x:hidden;
+    }
+    body.gallery-open{overflow:hidden}
+    a{color:inherit;text-decoration:none}
+    button{font:inherit}
+    .container{width:min(1180px,90%);margin:auto}
+
+    nav{
+      position:fixed;top:0;left:0;width:100%;z-index:100;
+      padding:24px 0;
+      background:rgba(10,10,10,.76);
+      backdrop-filter:blur(18px);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .nav-inner{display:flex;justify-content:space-between;align-items:center}
+    .logo{font-weight:800;font-size:1.05rem;letter-spacing:-.05em}
+    .logo span{color:var(--lime)}
+    .nav-links{display:flex;gap:32px;font-size:.82rem;color:var(--muted)}
+    .nav-links a:hover{color:var(--lime)}
+    .menu{display:none;font-size:1.5rem;cursor:pointer}
+
+    .hero{
+      min-height:100vh;display:flex;align-items:center;padding-top:100px;
+      position:relative;overflow:hidden;
+    }
+    .hero::before{
+      content:"";position:absolute;width:420px;height:420px;
+      background:var(--orange);filter:blur(160px);opacity:.11;
+      right:-160px;top:100px;
+    }
+    .hero-content{position:relative;z-index:1}
+    .eyebrow,.section-label{
+      color:var(--lime);font-family:"DM Mono",monospace;
+      font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;
+    }
+    .hero h1{
+      max-width:900px;margin:28px 0;
+      font-size:clamp(3.8rem,10vw,9.5rem);
+      line-height:.87;letter-spacing:-.09em;font-weight:800;
+    }
+    .hero h1 em{color:var(--lime);font-style:normal}
+    .hero-description{max-width:500px;color:var(--muted);line-height:1.7;font-size:1rem}
+    .hero-buttons{display:flex;gap:14px;margin-top:34px;flex-wrap:wrap}
+    .button{
+      display:inline-flex;align-items:center;gap:12px;padding:15px 21px;
+      border:1px solid var(--line);border-radius:100px;font-size:.82rem;
+      transition:.3s ease;cursor:pointer;
+    }
+    .button.primary{background:var(--lime);border-color:var(--lime);color:var(--black);font-weight:700}
+    .button:hover{transform:translateY(-4px);border-color:var(--lime)}
+    .hero-bottom{
+      position:absolute;bottom:34px;width:100%;display:flex;
+      justify-content:space-between;color:var(--muted);
+      font-family:"DM Mono",monospace;font-size:.68rem;text-transform:uppercase;
+    }
+
+    section{padding:130px 0;border-top:1px solid var(--line)}
+    .section-heading{
+      display:flex;justify-content:space-between;align-items:end;
+      gap:30px;margin-bottom:55px;
+    }
+    .section-heading h2{
+      font-size:clamp(2.5rem,6vw,5.5rem);
+      letter-spacing:-.08em;line-height:.9;max-width:650px;
+    }
+    .section-heading p{color:var(--muted);max-width:280px;font-size:.9rem;line-height:1.6}
+
+    .projects{
+      display:grid;grid-template-columns:repeat(2,1fr);gap:22px;
+    }
+    .project{
+      background:var(--card);border:1px solid var(--line);
+      border-radius:24px;overflow:hidden;transition:.4s ease;cursor:pointer;
+    }
+    .project:hover{transform:translateY(-8px);border-color:#5c6538}
+    .project.featured{grid-column:span 2}
+    .project-image{
+      height:390px;position:relative;overflow:hidden;
+      background-size:cover;background-position:center;
+    }
+    .project.featured .project-image{height:510px}
+    .project-image img{
+      width:100%;height:100%;object-fit:cover;display:block;
+      transition:transform .7s cubic-bezier(.2,.7,.2,1);
+    }
+    .project:hover .project-image img{transform:scale(1.045)}
+    .project-image::before{
+      content:"";position:absolute;inset:0;z-index:1;
+      background:linear-gradient(135deg,rgba(0,0,0,.04),rgba(0,0,0,.5));
+      pointer-events:none;
+    }
+    .project-image::after{
+      content:"OPEN ↗";position:absolute;z-index:2;right:22px;bottom:20px;
+      background:var(--lime);color:var(--black);padding:13px 17px;
+      border-radius:100px;font-family:"DM Mono",monospace;font-size:.68rem;
+      font-weight:bold;opacity:0;transform:translateY(10px);transition:.3s ease;
+    }
+    .project:hover .project-image::after{opacity:1;transform:translateY(0)}
+    .project.photography .project-image::after{content:"VIEW GALLERY ↗"}
+    .project-info{padding:25px}
+    .project-info small{
+      color:var(--lime);font-family:"DM Mono",monospace;
+      text-transform:uppercase;font-size:.65rem;
+    }
+    .project-info h3{font-size:1.5rem;margin:10px 0;letter-spacing:-.05em}
+    .project-info p{color:var(--muted);font-size:.86rem;line-height:1.6}
+    .tools{margin-top:18px;color:#707069;font-family:"DM Mono",monospace;font-size:.65rem}
+
+    .photo-preview{
+      display:grid;grid-template-columns:1.15fr .85fr;gap:2px;
+      height:100%;
+    }
+    .photo-preview div{overflow:hidden}
+    .photo-preview img{width:100%;height:100%;object-fit:cover;transition:.7s ease}
+    .project:hover .photo-preview img{transform:scale(1.04)}
+
+    .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+    .about-text{font-size:clamp(1.7rem,3vw,3rem);line-height:1.15;letter-spacing:-.06em}
+    .about-text span{color:var(--lime)}
+    .about-side{color:var(--muted);line-height:1.8;font-size:.95rem}
+    .about-side p+p{margin-top:20px}
+
+    .services{
+      display:grid;grid-template-columns:repeat(4,1fr);
+      gap:1px;background:var(--line);border:1px solid var(--line)
+    }
+    .service{min-height:220px;padding:28px;background:var(--black)}
+    .service-number{color:var(--lime);font-family:"DM Mono",monospace;font-size:.7rem}
+    .service h3{margin:60px 0 12px;font-size:1.3rem;letter-spacing:-.04em}
+    .service p{color:var(--muted);font-size:.8rem;line-height:1.5}
+
+    .process-strip{
+      display:grid;grid-template-columns:repeat(5,1fr);gap:12px;
+      margin-top:35px;
+    }
+    .process-card{
+      aspect-ratio:4/3;background:var(--card);border:1px solid var(--line);
+      border-radius:16px;overflow:hidden;position:relative;
+    }
+    .process-card img{width:100%;height:100%;object-fit:cover;display:block}
+    .process-card span{
+      position:absolute;left:12px;bottom:10px;
+      padding:6px 9px;background:rgba(10,10,10,.78);
+      color:var(--lime);font:500 .62rem "DM Mono",monospace;
+    }
+
+    .contact{text-align:center;padding-bottom:80px}
+    .contact h2{
+      max-width:850px;margin:25px auto;
+      font-size:clamp(3rem,8vw,8rem);
+      line-height:.87;letter-spacing:-.09em
+    }
+    .contact h2 span{color:var(--lime)}
+    .contact p{color:var(--muted);margin-bottom:32px}
+    .contact-actions{display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap}
+    .whatsapp-button{display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;padding:0}
+    .whatsapp-icon{width:25px;height:25px;display:block}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .whatsapp-float{position:fixed;right:24px;bottom:24px;z-index:90;width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--lime);color:var(--black);border:1px solid var(--lime);box-shadow:0 12px 30px rgba(0,0,0,.35);transition:.3s ease}
+    .whatsapp-float:hover{transform:translateY(-5px) scale(1.04)}
+    .whatsapp-float svg{width:27px;height:27px}
+    footer{
+      border-top:1px solid var(--line);padding:25px 0;color:var(--muted);
+      font-family:"DM Mono",monospace;font-size:.65rem;
+      display:flex;justify-content:space-between
+    }
+    footer a:hover{color:var(--lime)}
+
+    /* Photo treatment / editorial placement */
+    .project-image img{object-position:center}
+    .project.featured .project-image img{object-position:center 48%}
+    .photo-preview div:first-child img{object-position:center 45%}
+    .photo-preview div:last-child img{object-position:center 50%}
+    .photo-preview{grid-template-columns:1.08fr .92fr}
+    .project.photography .project-image{background:#0d0d0d}
+    .project.photography .project-image::before{background:linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.58))}
+    .process-card:nth-child(1) img{object-position:center 45%}
+    .process-card:nth-child(2) img{object-position:center 50%}
+    .process-card:nth-child(3) img{object-position:center 48%}
+    .process-card:nth-child(4) img{object-position:center 45%}
+    .process-card:nth-child(5) img{object-position:center 50%}
+
+    /* Gallery */
+    .gallery-overlay{
+      position:fixed;inset:0;z-index:1000;background:rgba(5,5,5,.97);
+      opacity:0;visibility:hidden;pointer-events:none;
+      transition:.35s ease;overflow-y:auto;
+    }
+    .gallery-overlay.active{opacity:1;visibility:visible;pointer-events:auto}
+    .gallery-shell{width:min(1400px,94%);margin:auto;padding:28px 0 70px}
+    .gallery-top{
+      position:sticky;top:0;z-index:3;display:flex;align-items:center;
+      justify-content:space-between;padding:10px 0 25px;
+      background:linear-gradient(var(--black) 70%,transparent);
+    }
+    .gallery-title{font-size:clamp(1.8rem,4vw,3.5rem);letter-spacing:-.07em}
+    .gallery-title span{color:var(--lime)}
+    .close-gallery{
+      width:48px;height:48px;border-radius:50%;border:1px solid var(--line);
+      background:var(--card);color:var(--white);cursor:pointer;font-size:1.4rem;
+      transition:.25s ease
+    }
+    .close-gallery:hover{background:var(--lime);color:var(--black);transform:rotate(90deg)}
+    .gallery-intro{color:var(--muted);font-size:.85rem;line-height:1.6;max-width:600px;margin:0 0 35px}
+    .gallery-grid{
+      columns:3 280px;column-gap:14px
+    }
+    .gallery-item{
+      break-inside:avoid;margin:0 0 14px;border-radius:16px;overflow:hidden;
+      background:var(--card);border:1px solid var(--line);cursor:zoom-in;
+      position:relative
+    }
+    .gallery-item img{width:100%;height:auto;display:block;transition:.5s ease;object-fit:cover}
+    .gallery-item:hover img{transform:scale(1.025)}
+    .gallery-item::after{
+      content:"VIEW";position:absolute;right:12px;bottom:12px;
+      background:var(--lime);color:var(--black);padding:7px 10px;
+      border-radius:50px;font:500 .58rem "DM Mono",monospace;
+      opacity:0;transform:translateY(6px);transition:.25s ease
+    }
+    .gallery-item:hover::after{opacity:1;transform:translateY(0)}
+
+    .lightbox{
+      position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.94);
+      display:flex;align-items:center;justify-content:center;padding:35px;
+      opacity:0;visibility:hidden;pointer-events:none;transition:.25s ease
+    }
+    .lightbox.active{opacity:1;visibility:visible;pointer-events:auto}
+    .lightbox img{max-width:94vw;max-height:88vh;object-fit:contain;border-radius:10px}
+    .lightbox-close{
+      position:absolute;top:20px;right:22px;width:46px;height:46px;
+      border:1px solid #444;border-radius:50%;background:#151515;color:#fff;
+      cursor:pointer;font-size:1.3rem
+    }
+
+    @media(max-width:900px){
+      .services{grid-template-columns:repeat(2,1fr)}
+      .process-strip{grid-template-columns:repeat(3,1fr)}
+    }
+    @media(max-width:700px){
+      .nav-links{
+        display:none;position:absolute;top:72px;left:5%;width:90%;
+        padding:22px;background:#151515;border:1px solid var(--line);
+        border-radius:18px;flex-direction:column;gap:20px
+      }
+      .nav-links.active{display:flex}
+      .menu{display:block}
+      .hero h1{font-size:4.5rem}
+      .hero-bottom{display:none}
+      section{padding:90px 0}
+      .section-heading,.about-grid{display:block}
+      .section-heading p{margin-top:25px}
+      .projects{display:block}
+      .project{margin-bottom:20px}
+      .project-image,.project.featured .project-image{height:330px}
+      .services{display:block}
+      .service{border-bottom:1px solid var(--line)}
+      .about-side{margin-top:35px}
+      .process-strip{grid-template-columns:repeat(2,1fr)}
+      .gallery-shell{width:92%}
+      .gallery-grid{columns:2 150px}
+      .lightbox{padding:15px}
+      footer{display:block;line-height:2}
+      .whatsapp-float{right:16px;bottom:16px;width:54px;height:54px}
+    }
+    @media(max-width:430px){
+      .hero h1{font-size:3.8rem}
+      .gallery-grid{columns:1}
+      .process-strip{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <div class="container nav-inner">
+      <a href="#" class="logo">ft<span>.</span>dorzieiiy</a>
+      <div class="nav-links" id="navLinks">
+        <a href="#work">Work</a>
+        <a href="#about">About</a>
+        <a href="#services">Services</a>
+        <a href="#process">Process</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <div class="menu" onclick="toggleMenu()">☰</div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-content">
+        <div class="eyebrow">Video editor / visual storyteller</div>
+        <h1>I turn raw footage<br>into a <em>feeling.</em></h1>
+        <p class="hero-description">
+          Cinematic edits, scroll-stopping reels, photography, and visual stories
+          built with rhythm, emotion, and intention.
+        </p>
+        <div class="hero-buttons">
+          <a href="#work" class="button primary">Explore my work ↘</a>
+          <a href="#contact" class="button">Start a project ↗</a>
+        </div>
+      </div>
+      <div class="container hero-bottom">
+        <span>Based in India</span>
+        <span>Available for selected projects ↓</span>
+      </div>
+    </section>
+
+    <section id="work">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <div class="section-label">01 / Selected work</div>
+            <h2>Frames with<br>something to say.</h2>
+          </div>
+          <p>A collection of edits, experiments, photography, and visual stories made for people who care about the details.</p>
+        </div>
+
+        <div class="projects">
+          <a class="project featured" href="https://drive.google.com/drive/folders/1UihANm0vY6_cIrRIcBsv5ZKYEAUgb2Be?usp=sharing" target="_blank" rel="noopener">
+            <div class="project-image">
+              <img onerror="this.style.display='none'" src="photos/IMG_1413(2).jpg" alt="Premiere Pro editing project">
+            </div>
+            <div class="project-info">
+              <small>01 / Video projects</small>
+              <h3>My Edit Archive</h3>
+              <p>Selected edits, reels, cinematic stories, and experiments — collected in one place.</p>
+              <div class="tools">Premiere Pro · After Effects · Color · Sound</div>
+            </div>
+          </a>
+
+          <div class="project photography" onclick="openGallery()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')openGallery()">
+            <div class="project-image">
+              <div class="photo-preview">
+                <div><img onerror="this.style.display='none'" src="photos/F7731B73-1FBE-4B1A-B4B6-CF69318512F4(1).JPEG" alt="Editorial car photography"></div>
+                <div><img onerror="this.style.display='none'" src="photos/IMG_5255.JPG" alt="Cinematic poster design"></div>
+              </div>
+            </div>
+            <div class="project-info">
+              <small>02 / Photography</small>
+              <h3>Visual Diary</h3>
+              <p>A curated gallery of frames, moods, cars, streets, editorial treatments, and visual experiments.</p>
+              <div class="tools">Photography · Composition · Color · Visual direction</div>
+            </div>
+          </div>
+
+          <a class="project" href="https://drive.google.com/drive/folders/1UihANm0vY6_cIrRIcBsv5ZKYEAUgb2Be?usp=sharing" target="_blank" rel="noopener">
+            <div class="project-image">
+              <img onerror="this.style.display='none'" src="photos/IMG_1414(2).jpg" alt="Video editing timeline">
+            </div>
+            <div class="project-info">
+              <small>03 / Creative archive</small>
+              <h3>Behind the Edit</h3>
+              <p>Open the full archive to explore more projects, experiments, and finished work.</p>
+              <div class="tools">Editing · Storytelling · Motion · Workflow</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="about">
+      <div class="container">
+        <div class="section-label">02 / About me</div>
+        <div class="about-grid" style="margin-top:45px">
+          <div class="about-text">I believe every frame has a <span>pulse.</span></div>
+          <div class="about-side">
+            <p>I’m ft.dorzieiiy, a video editor focused on turning raw footage into visual stories people can feel.</p>
+            <p>From cinematic reels to brand content, I care about pacing, atmosphere, sound, photography, and the tiny details that make an edit stay in someone’s mind.</p>
+            <p>Currently creating, learning, and looking for the next story worth bringing to life.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="services">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <div class="section-label">03 / What I do</div>
+            <h2>Made for the<br>scroll generation.</h2>
+          </div>
+        </div>
+
+        <div class="services">
+          <div class="service">
+            <div class="service-number">01</div>
+            <h3>Short-form editing</h3>
+            <p>Reels, shorts, and social edits designed to hold attention.</p>
+          </div>
+          <div class="service">
+            <div class="service-number">02</div>
+            <h3>Cinematic stories</h3>
+            <p>Atmospheric edits with emotion, rhythm, and visual identity.</p>
+          </div>
+          <div class="service">
+            <div class="service-number">03</div>
+            <h3>Motion & type</h3>
+            <p>Expressive typography, transitions, captions, and motion graphics.</p>
+          </div>
+          <div class="service">
+            <div class="service-number">04</div>
+            <h3>Color & sound</h3>
+            <p>Polished color, sound design, music, and final delivery.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="process">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <div class="section-label">04 / Behind the scenes</div>
+            <h2>The work<br>behind the frame.</h2>
+          </div>
+          <p>A glimpse into the timelines, compositions, and editing sessions that shape the final visuals.</p>
+        </div>
+
+        <div class="process-strip">
+          <div class="process-card"><img onerror="this.style.display='none'" src="photos/IMG_1410(2).jpg" alt="Premiere Pro workspace"><span>01 / TIMELINE</span></div>
+          <div class="process-card"><img onerror="this.style.display='none'" src="photos/IMG_1411(2).jpg" alt="Editing workspace"><span>02 / VISUALS</span></div>
+          <div class="process-card"><img onerror="this.style.display='none'" src="photos/IMG_1412(2).jpg" alt="Premiere Pro sequence"><span>03 / RHYTHM</span></div>
+          <div class="process-card"><img onerror="this.style.display='none'" src="photos/IMG_1413(2).jpg" alt="Color and edit workflow"><span>04 / COLOR</span></div>
+          <div class="process-card"><img onerror="this.style.display='none'" src="photos/IMG_1414(2).jpg" alt="Editing timeline"><span>05 / FINAL CUT</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="contact">
+      <div class="container">
+        <div class="section-label">05 / Let’s create</div>
+        <h2>Got footage?<br>Let’s give it a <span>story.</span></h2>
+        <p>Available for freelance edits, collaborations, and creative projects.</p>
+        <div class="contact-actions">
+          <a href="mailto:srivallidasari6@gmail.com" class="button primary">Email me ↗</a>
+          <a href="https://wa.me/918341423841" target="_blank" rel="noopener" class="button whatsapp-button" aria-label="Chat with me on WhatsApp">
+            <svg class="whatsapp-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M20.5 3.5A11.9 11.9 0 0 0 12.04 0C5.48 0 .15 5.33.15 11.89c0 2.1.55 4.15 1.59 5.96L0 24l6.31-1.66a11.86 11.86 0 0 0 5.73 1.46h.01c6.55 0 11.88-5.33 11.88-11.89 0-3.18-1.23-6.16-3.43-8.41Z" fill="currentColor"/>
+              <path d="M17.55 13.77c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46.13-.61.14-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49 0 1.47 1.07 2.89 1.22 3.09.15.2 2.1 3.2 5.09 4.49.71.31 1.27.49 1.7.63.71.23 1.36.2 1.87.12.57-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.12-.27-.2-.57-.35Z" fill="var(--black)"/>
+            </svg>
+            <span class="sr-only">WhatsApp</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container">
+    <span>© 2026 ft.dorzieiiy</span>
+    <span>
+      <a href="https://instagram.com/" target="_blank" rel="noopener">Instagram</a>
+      &nbsp; / &nbsp;
+      <a href="mailto:srivallidasari6@gmail.com">srivallidasari6@gmail.com</a>
+      &nbsp; / &nbsp;
+      <a href="https://wa.me/918341423841" target="_blank" rel="noopener" aria-label="WhatsApp">WhatsApp</a>
+    </span>
+  </footer>
+
+  <a class="whatsapp-float" href="https://wa.me/918341423841" target="_blank" rel="noopener" aria-label="Chat with me on WhatsApp">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M20.5 3.5A11.9 11.9 0 0 0 12.04 0C5.48 0 .15 5.33.15 11.89c0 2.1.55 4.15 1.59 5.96L0 24l6.31-1.66a11.86 11.86 0 0 0 5.73 1.46h.01c6.55 0 11.88-5.33 11.88-11.89 0-3.18-1.23-6.16-3.43-8.41Z" fill="currentColor"/>
+      <path d="M17.55 13.77c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46.13-.61.14-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49 0 1.47 1.07 2.89 1.22 3.09.15.2 2.1 3.2 5.09 4.49.71.31 1.27.49 1.7.63.71.23 1.36.2 1.87.12.57-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.12-.27-.2-.57-.35Z" fill="var(--black)"/>
+    </svg>
+  </a>
+
+  <!-- Same-page photography gallery -->
+  <div class="gallery-overlay" id="galleryOverlay" aria-hidden="true">
+    <div class="gallery-shell">
+      <div class="gallery-top">
+        <div>
+          <div class="section-label">02 / Photography</div>
+          <h2 class="gallery-title">Visual <span>Diary.</span></h2>
+        </div>
+        <button class="close-gallery" onclick="closeGallery()" aria-label="Close gallery">×</button>
+      </div>
+
+      <p class="gallery-intro">
+        A deliberately mixed editorial wall — portrait frames, cars, streets,
+        graphic treatments, and selected editing-workflow moments, arranged for visual rhythm. Click any image
+        for a larger view.
+      </p>
+
+      <div class="gallery-grid">
+        <div class="gallery-item"><img onerror="this.style.display='none'" src="photos/F7731B73-1FBE-4B1A-B4B6-CF69318512F4(1).JPEG" alt="Editorial car composition" loading="lazy"></div>
+        <div class="gallery-item"><img onerror="this.style.display='none'" src="photos/IMG_5255.JPG" alt="Cinematic poster" loading="lazy"></div>
+        <div class="gallery-item"><img onerror="this.style.display='none'" src="photos/IMG_9777.jpg" alt="Vogue inspired car composition" loading="lazy"></div>
+        <div class="gallery-item"><img onerror="this.style.display='none'" src="photos/IMG_8478.jpg" alt="Street food and smoke" loading="lazy"></div>
+        <div class="gallery-item"><img onerror="this.style.display='none'" src="photos/IMG_9779.JPG" alt="Red editorial car composition" loading="lazy"></div>
+        <div class="gallery-item"><img onerror="this.style.display='none'" src="photos/IMG_9778.JPG" alt="Black and white editorial car composition" loading="lazy"></div>
+        <div class="gallery-item"><img onerror="this.style.display='none'" src="photos/IMG_9781.jpg" alt="Editorial car composition" loading="lazy"></div>
+        <div class="gallery-item"><img onerror="this.style.display='none'" src="photos/F5BB94A2-EB98-4274-ABAA-FA95C7F132DD(1).PNG" alt="Moody car photography" loading="lazy"></div>
+        <div class="gallery-item"><img onerror="this.style.display='none'" src="photos/IMG_1410(2).jpg" alt="Editing workspace" loading="lazy"></div>
+        <div class="gallery-item"><img onerror="this.style.display='none'" src="photos/IMG_1411(2).jpg" alt="Editing workspace with phone" loading="lazy"></div>
+        <div class="gallery-item"><img onerror="this.style.display='none'" src="photos/IMG_1412(2).jpg" alt="Premiere Pro sequence" loading="lazy"></div>
+        <div class="gallery-item"><img onerror="this.style.display='none'" src="photos/IMG_1413(2).jpg" alt="Premiere Pro edit" loading="lazy"></div>
+        <div class="gallery-item"><img onerror="this.style.display='none'" src="photos/IMG_1414(2).jpg" alt="Premiere Pro timeline" loading="lazy"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+    <button class="lightbox-close" aria-label="Close image">×</button>
+    <img id="lightboxImage" src="" alt="">
+  </div>
+
+  <script>
+    function toggleMenu(){
+      document.getElementById("navLinks").classList.toggle("active");
+    }
+
+    document.querySelectorAll(".nav-links a").forEach(link=>{
+      link.addEventListener("click",()=>{
+        document.getElementById("navLinks").classList.remove("active");
+      });
+    });
+
+    const galleryOverlay = document.getElementById("galleryOverlay");
+    const lightbox = document.getElementById("lightbox");
+    const lightboxImage = document.getElementById("lightboxImage");
+
+    function openGallery(){
+      galleryOverlay.classList.add("active");
+      galleryOverlay.setAttribute("aria-hidden","false");
+      document.body.classList.add("gallery-open");
+      galleryOverlay.scrollTop = 0;
+    }
+
+    function closeGallery(){
+      closeLightbox();
+      galleryOverlay.classList.remove("active");
+      galleryOverlay.setAttribute("aria-hidden","true");
+      document.body.classList.remove("gallery-open");
+    }
+
+    document.querySelectorAll(".gallery-item img").forEach(img=>{
+      img.addEventListener("click",()=>{
+        lightboxImage.src = img.src;
+        lightboxImage.alt = img.alt;
+        lightbox.classList.add("active");
+      });
+    });
+
+    function closeLightbox(event){
+      if(event && event.target === lightboxImage) return;
+      lightbox.classList.remove("active");
+      lightboxImage.src = "";
+    }
+
+    document.addEventListener("keydown",event=>{
+      if(event.key === "Escape"){
+        if(lightbox.classList.contains("active")) closeLightbox();
+        else if(galleryOverlay.classList.contains("active")) closeGallery();
+      }
+    });
+  </script>
+</body>
+</html>
